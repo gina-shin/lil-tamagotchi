@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>lil-tamagotchi</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+
+    <div class="stats">
+  <span>
+    <span>Energy: </span>
+    <span id="energy"></span>
+  </span>
+
+  <span>
+    <span>Friendship: </span>
+    <span id="friendship"></span>
+  </span>
+
+  <span>
+    <span>Happiness: </span>
+    <span id="happiness"></span>
+  </span>
+
+  <span>
+    <span>Health: </span>
+    <span id="health"></span>
+  </span>
+</div>
+
+<div class="view">
+  <div class="room">
+    <div class="tomo" id="tomo">tomo</div>
+    <div class="food" id="berry1">berry</div>
+    <div class="food" id="berry2">berry</div>
+  </div>
+
+  <div class="action-buttons">
+    <button id="feed-button" class="feed-button">
+      feed tomo a berry!
+    </button>
+
+    <button id="pet-button" class="pet-button">
+      pet tomo!
+    </button>
+
+    <button id="play-button" class="play-button">
+      let's play
+    </button>
+  </div>
+</div>
+  </body>
+</html>
