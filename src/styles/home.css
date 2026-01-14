@@ -1,0 +1,21 @@
+.home {
+  background-image: url('/background.jpg');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  position: relative;
+}
+
+.hippo {
+  height: 300px;
+  bottom: 10%;
+  position: absolute;
+}
+
+.start-button {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
