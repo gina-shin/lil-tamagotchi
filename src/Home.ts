@@ -4,54 +4,129 @@ import './styles/home.css'
 
 export function renderHome(container: HTMLElement) {
   container.innerHTML = homeHTML
-  const hippo = container.querySelector('#hippo') as HTMLImageElement
-  const startButton = container.querySelector('.start-button') as HTMLButtonElement
+  const hippo = container.querySelector('#hippo') as HTMLDivElement
+  let hippoX = 1000
+  let hippoY = 100
+  hippo.style.left = `${hippoX}px`
+  hippo.style.top = `${hippoY}px`
   let shouldHippoRun = false
-  let hippoX = 0
-  let hippoY = 0
-  let shouldHippoFollowMouse = false
-  let mouseX = 0
-  let mouseY = 0
+  let hasEaten = false
 
-  document.addEventListener('mousemove', (event: MouseEvent) => {
-    mouseX = event.clientX
-    mouseY = event.clientY
-  })
+  let vx = 0
+  let vy = 0
 
-  const loop = () => {
-    if (shouldHippoRun && !shouldHippoFollowMouse) {
-      hippoX += (innerWidth - hippo.width) / 400
-      hippo.style.left = `${hippoX}px`
-
-      if (hippoX > (innerWidth / 2) - hippo.width/2) {
-        hippoX = (innerWidth / 2) - hippo.width/2
-      }
-    }
-    else if (shouldHippoFollowMouse) {
-      hippoX += (mouseX - hippoX) / 100
-      hippoY += (mouseY - hippoY) / 100 
-      hippo.style.left = `${hippoX}px`
-      hippo.style.top = `${hippoY}px`
-    }
-    else {
-      hippo.style.left = `0px`
-    }
-    requestAnimationFrame(loop)
+  const tomoStats = {
+    hunger: 0,
+    happiness: 0,
+    energy: 0,
+    social: 0,
+    hygiene: 0,
+    fun: 0,
+    cleanliness: 0,
+    health: 0,
   }
 
+  type AllowedCode = 'ArrowRight' | 'ArrowLeft' | 'ArrowDown' | 'ArrowUp' | 'Space'
+  const allowedCodes: AllowedCode[] = ['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Space']
 
-  startButton.addEventListener('click', () => {
-    shouldHippoFollowMouse = false
-    shouldHippoRun = !shouldHippoRun
-    hippoX = 0
-    hippo.style.top = '50%'
-  })
+  const keys: Partial<Record<AllowedCode, boolean>> = {}
+  window.onkeydown = e => {
+    const code = e.code as AllowedCode
+    if (!allowedCodes.includes(code)) return
+    e.preventDefault()
+    shouldHippoRun = true
+    keys[code] = true
+  }
+  window.onkeyup = e => {
+    const code = e.code as AllowedCode
+    if (!allowedCodes.includes(code)) return
+    e.preventDefault()
+    shouldHippoRun = false
+    keys[code] = false
+    // vy = 0
+    // vx = 0
+  }
+  const bowl = container.querySelector('#bowl') as HTMLDivElement
 
-  hippo.addEventListener('click', (event: MouseEvent) => {
-    shouldHippoFollowMouse = true
-    hippoX = event.clientX - hippo.width/2
-    hippoY = event.clientY - hippo.height/2
-  })
+  const loop = () => {
+    // if (shouldHippoRun) {
+    //   // console.log(hippoX)
+    //   hippoX += (0 - hippoX) / 500
+    //   hippo.style.left = `${hippoX}px`
+
+      // const hippoRect = hippo.getBoundingClientRect()
+      // const bowlRect = bowl.getBoundingClientRect()
+
+    //   hasEaten =
+    //     hippoRect.left < bowlRect.right &&
+    //     hippoRect.right > bowlRect.left &&
+    //     hippoRect.top < bowlRect.bottom &&
+    //     hippoRect.bottom > bowlRect.top
+
+    //   console.log('hasEaten', hasEaten)
+    // }
+
+    if(shouldHippoRun) {
+      if (keys.ArrowRight) {
+        vx = 1
+      }
+      if (keys.ArrowLeft) {
+        vx = -1
+      }
+      if (keys.ArrowDown) {
+        vy = 1
+      }
+      if (keys.ArrowUp) {
+        vy = -1
+      }
+      if (keys.Space) {
+        console.log('vy', vy)
+        console.log('vx', vx)
+        console.log('hippoY', hippoY)
+        vy = -10
+        vx = -5 
+      }
+    }
+
+    vy += 0.1
+
+    if (hippoY > 500) {
+      hippoY = 500
+      vy = 0
+    }
+  
+    hippoY += vy
+    hippoX += vx
+    hippo.style.left = `${hippoX}px`
+    hippo.style.top = `${hippoY}px`
+
+    const hippoRect = hippo.getBoundingClientRect()
+    const bowlRect = bowl.getBoundingClientRect()
+
+    hasEaten =
+    hippoRect.left < bowlRect.right &&
+    hippoRect.right > bowlRect.left &&
+    hippoRect.top < bowlRect.bottom &&
+    hippoRect.bottom > bowlRect.top
+
+  
+    if (hasEaten) {
+      vx = 10
+      vy = 10
+      console.log('removing bowl')
+      bowl.remove()
+      hasEaten = false
+      shouldHippoRun = false
+      tomoStats.hunger += 10
+      tomoStats.happiness += 10
+      tomoStats.energy += 10
+      tomoStats.health += 10
+
+      console.log(tomoStats)
+    }
+
+    requestAnimationFrame(loop)
+  }
 
   loop()
 }
