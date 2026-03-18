@@ -5,15 +5,19 @@ import './styles/home.css'
 export function renderHome(container: HTMLElement) {
   container.innerHTML = homeHTML
   const hippo = container.querySelector('#hippo') as HTMLDivElement
+  const startButton = container.querySelector('.start-button') as HTMLButtonElement
   let hippoX = 1000
   let hippoY = 100
   hippo.style.left = `${hippoX}px`
   hippo.style.top = `${hippoY}px`
   let shouldHippoRun = false
   let hasEaten = false
+  let shouldGenerateFood = false
 
   let vx = 0
   let vy = 0
+
+  let boost = 0
 
   const tomoStats = {
     hunger: 0,
@@ -46,38 +50,32 @@ export function renderHome(container: HTMLElement) {
     // vy = 0
     // vx = 0
   }
+  startButton.addEventListener('click', () => {
+    shouldGenerateFood = true
+  })
   const bowl = container.querySelector('#bowl') as HTMLDivElement
 
   const loop = () => {
-    // if (shouldHippoRun) {
-    //   // console.log(hippoX)
-    //   hippoX += (0 - hippoX) / 500
-    //   hippo.style.left = `${hippoX}px`
-
-      // const hippoRect = hippo.getBoundingClientRect()
-      // const bowlRect = bowl.getBoundingClientRect()
-
-    //   hasEaten =
-    //     hippoRect.left < bowlRect.right &&
-    //     hippoRect.right > bowlRect.left &&
-    //     hippoRect.top < bowlRect.bottom &&
-    //     hippoRect.bottom > bowlRect.top
-
-    //   console.log('hasEaten', hasEaten)
-    // }
+    if(shouldGenerateFood && document.querySelector('.food') === null) {
+      const food = document.createElement('div')
+      food.classList.add('food')
+      food.style.left = `${Math.random() * 1000}px`
+      food.style.top = `${Math.random() * 1000}px`
+      container.appendChild(food)
+    }
 
     if(shouldHippoRun) {
       if (keys.ArrowRight) {
-        vx = 1
+        vx = 4 + boost
       }
       if (keys.ArrowLeft) {
-        vx = -1
+        vx = -4 - boost
       }
       if (keys.ArrowDown) {
-        vy = 1
+        vy = 4 + boost
       }
       if (keys.ArrowUp) {
-        vy = -1
+        vy = -4 - boost
       }
       if (keys.Space) {
         console.log('vy', vy)
@@ -88,31 +86,21 @@ export function renderHome(container: HTMLElement) {
       }
     }
 
-    vy += 0.1
 
-    if (hippoY > 500) {
-      hippoY = 500
-      vy = 0
-    }
-  
-    hippoY += vy
-    hippoX += vx
-    hippo.style.left = `${hippoX}px`
-    hippo.style.top = `${hippoY}px`
-
+    // how do I do this with multiple objects?
     const hippoRect = hippo.getBoundingClientRect()
     const bowlRect = bowl.getBoundingClientRect()
 
     hasEaten =
-    hippoRect.left < bowlRect.right &&
+    (hippoRect.left < bowlRect.right &&
     hippoRect.right > bowlRect.left &&
     hippoRect.top < bowlRect.bottom &&
-    hippoRect.bottom > bowlRect.top
+    hippoRect.bottom > bowlRect.top)
 
+    console.log('hasEaten', hasEaten)
   
     if (hasEaten) {
-      vx = 10
-      vy = 10
+      boost = 10
       console.log('removing bowl')
       bowl.remove()
       hasEaten = false
@@ -124,6 +112,22 @@ export function renderHome(container: HTMLElement) {
 
       console.log(tomoStats)
     }
+
+    const friction = 0.95  
+    console.log('before friction x', '  hippoX', hippoX)
+    console.log('before friction y', '  hippoY', hippoY)
+    vy *= friction
+    vx *= friction
+
+    hippoX += vx
+    hippoY += vy
+
+    hippo.style.left = `${hippoX}px`
+    hippo.style.top = `${hippoY}px`
+
+    // setTimeout(() => {
+    //   loop()
+    // }, 10)
 
     requestAnimationFrame(loop)
   }
