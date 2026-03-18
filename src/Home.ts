@@ -4,13 +4,13 @@ import './styles/home.css'
 
 export function renderHome(container: HTMLElement) {
   container.innerHTML = homeHTML
-  const hippo = container.querySelector('#hippo') as HTMLDivElement
+  const fish = container.querySelector('#fish') as HTMLDivElement
   const startButton = container.querySelector('.start-button') as HTMLButtonElement
-  let hippoX = 1000
-  let hippoY = 100
-  hippo.style.left = `${hippoX}px`
-  hippo.style.top = `${hippoY}px`
-  let shouldHippoRun = false
+  let fishX = 1000
+  let fishY = 100
+  fish.style.left = `${fishX}px`
+  fish.style.top = `${fishY}px`
+  let shouldFishSwim = false
   let hasEaten = false
   let shouldGenerateFood = false
 
@@ -38,14 +38,14 @@ export function renderHome(container: HTMLElement) {
     const code = e.code as AllowedCode
     if (!allowedCodes.includes(code)) return
     e.preventDefault()
-    shouldHippoRun = true
+    shouldFishSwim = true
     keys[code] = true
   }
   window.onkeyup = e => {
     const code = e.code as AllowedCode
     if (!allowedCodes.includes(code)) return
     e.preventDefault()
-    shouldHippoRun = false
+    shouldFishSwim = false
     keys[code] = false
     // vy = 0
     // vx = 0
@@ -64,7 +64,7 @@ export function renderHome(container: HTMLElement) {
       container.appendChild(food)
     }
 
-    if(shouldHippoRun) {
+    if(shouldFishSwim) {
       if (keys.ArrowRight) {
         vx = 4 + boost
       }
@@ -80,7 +80,7 @@ export function renderHome(container: HTMLElement) {
       if (keys.Space) {
         console.log('vy', vy)
         console.log('vx', vx)
-        console.log('hippoY', hippoY)
+        console.log('fishY', fishY)
         vy = -10
         vx = -5 
       }
@@ -88,14 +88,14 @@ export function renderHome(container: HTMLElement) {
 
 
     // how do I do this with multiple objects?
-    const hippoRect = hippo.getBoundingClientRect()
+    const fishRect = fish.getBoundingClientRect()
     const bowlRect = bowl.getBoundingClientRect()
 
     hasEaten =
-    (hippoRect.left < bowlRect.right &&
-    hippoRect.right > bowlRect.left &&
-    hippoRect.top < bowlRect.bottom &&
-    hippoRect.bottom > bowlRect.top)
+    (fishRect.left < bowlRect.right &&
+    fishRect.right > bowlRect.left &&
+    fishRect.top < bowlRect.bottom &&
+    fishRect.bottom > bowlRect.top)
 
     console.log('hasEaten', hasEaten)
   
@@ -104,7 +104,7 @@ export function renderHome(container: HTMLElement) {
       console.log('removing bowl')
       bowl.remove()
       hasEaten = false
-      shouldHippoRun = false
+      shouldFishSwim = false
       tomoStats.hunger += 10
       tomoStats.happiness += 10
       tomoStats.energy += 10
@@ -114,16 +114,16 @@ export function renderHome(container: HTMLElement) {
     }
 
     const friction = 0.95  
-    console.log('before friction x', '  hippoX', hippoX)
-    console.log('before friction y', '  hippoY', hippoY)
+    console.log('before friction x', '  fishX', fishX)
+    console.log('before friction y', '  fishY', fishY)
     vy *= friction
     vx *= friction
 
-    hippoX += vx
-    hippoY += vy
+    fishX += vx
+    fishY += vy
 
-    hippo.style.left = `${hippoX}px`
-    hippo.style.top = `${hippoY}px`
+    fish.style.left = `${fishX}px`
+    fish.style.top = `${fishY}px`
 
     // setTimeout(() => {
     //   loop()
