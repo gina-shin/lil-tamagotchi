@@ -63,19 +63,21 @@ export function renderHome(container: HTMLElement) {
       food.style.top = `${Math.random() * 1000}px`
       container.appendChild(food)
     }
+ 
+    const speed = .3 + boost
 
     if(shouldFishSwim) {
       if (keys.ArrowRight) {
-        vx = 4 + boost
+        vx += speed
       }
       if (keys.ArrowLeft) {
-        vx = -4 - boost
+        vx -= speed
       }
       if (keys.ArrowDown) {
-        vy = 4 + boost
+        vy += speed
       }
       if (keys.ArrowUp) {
-        vy = -4 - boost
+        vy -= speed
       }
       if (keys.Space) {
         console.log('vy', vy)
@@ -113,11 +115,29 @@ export function renderHome(container: HTMLElement) {
       console.log(tomoStats)
     }
 
-    const friction = 0.95  
+    const friction = 0.99
     console.log('before friction x', '  fishX', fishX)
     console.log('before friction y', '  fishY', fishY)
     vy *= friction
     vx *= friction
+
+    const maxSpeed = 5
+
+    if (vx > maxSpeed){
+      vx = maxSpeed
+    }
+
+    if (vx < -maxSpeed){
+      vx = -maxSpeed
+    }
+
+    if (vy > maxSpeed){
+      vy = maxSpeed
+    }
+
+    if (vy < -maxSpeed){
+      vy = -maxSpeed
+    }
 
     fishX += vx
     fishY += vy
