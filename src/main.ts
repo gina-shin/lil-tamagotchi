@@ -1,15 +1,15 @@
-import { renderHome } from './Home'
-import { renderGame } from './Game'
 import './styles/global.css'
 
-const shouldShowHome = true
+import { Game } from './engine/Game'
+import { HomeScene } from './game/scenes/HomeScene'
+import { RoomScene } from './game/scenes/RoomScene'
 
 const appContainer = document.querySelector('#app')!
 
-if (shouldShowHome) {
-  renderHome(appContainer as HTMLElement)
-} else {
-  renderGame(appContainer as HTMLElement)
-}
+const game = new Game(appContainer as HTMLElement)
+
+const shouldShowHome = true
+game.setScene(shouldShowHome ? new HomeScene() : new RoomScene())
+game.start()
 
 
