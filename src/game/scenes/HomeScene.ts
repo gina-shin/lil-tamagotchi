@@ -2,26 +2,19 @@ import homeHTML from '../../components/Home.html?raw'
 import '../../styles/home.css'
 
 import { Scene } from '../../engine/Scene'
-import { Keyboard } from '../../engine/input/Keyboard'
-import { TomoEntity } from '../entities/TomoEntity'
-import type { Entity } from '../../engine/Entity'
-import { CollisionSystem } from '../systems/CollisionSystem'
-import { FoodSpawnSystem } from '../systems/FoodSpawnSystem'
-import { MovementSystem } from '../systems/MovementSystem'
-import { TomoInputSystem } from '../systems/TomoInputSystem'
+import { Tomo } from '../objects/Tomo'
 
 export class HomeScene extends Scene {
-  private keyboard = new Keyboard()
-  private tomoInput = new TomoInputSystem(this.keyboard)
-  private foodSpawn = new FoodSpawnSystem(() => {
-    const el = document.createElement('div')
-    el.classList.add('food')
-    el.style.position = 'absolute'
-    el.style.width = '50px'
-    el.style.height = '50px'
-    el.style.backgroundColor = 'brown'
-    return el
-  })
+  private tomo: Tomo | null = null
+  private shouldGenerateFood = false
+  private vx = 0
+  private vy = 0
+  private boost = 0
+
+  private bowl: HTMLDivElement | null = null
+
+  private allowedCodes = ['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Space'] as const
+  private keys: Partial<Record<(typeof this.allowedCodes)[number], boolean>> = {}
 
   mount(root: HTMLElement) {
     super.mount(root)
@@ -29,70 +22,105 @@ export class HomeScene extends Scene {
 
     const fishEl = root.querySelector('#fish') as HTMLDivElement
     const startButton = root.querySelector('.start-button') as HTMLButtonElement
+    this.bowl = root.querySelector('#bowl') as HTMLDivElement
 
-    const tomo = this.add(new TomoEntity(fishEl))
-    tomo.pos.x = 1000
-    tomo.pos.y = 100
-    tomo.syncToDom()
+    this.tomo = new Tomo(fishEl)
+    this.tomo.x = 1000
+    this.tomo.y = 100
 
-    this.keyboard.attach(window)
-
-    window.addEventListener('keydown', this.preventArrowScroll, { passive: false })
+    window.addEventListener('keydown', this.onKeyDown, { passive: false })
+    window.addEventListener('keyup', this.onKeyUp, { passive: false })
 
     startButton.addEventListener('click', () => {
-      this.foodSpawn.enable()
+      this.shouldGenerateFood = true
     })
-
-    tomo.onCollision = (other: Entity, scene: Scene) => {
-      if (!other.tags.has('food')) return
-
-      this.tomoInput.applyBoost(10)
-
-      other.el.remove()
-      const idx = scene.entities.indexOf(other)
-      if (idx >= 0) scene.entities.splice(idx, 1)
-
-      tomo.stats.happiness += 10
-      tomo.stats.energy += 10
-      tomo.stats.health += 10
-    }
-
-    this.systems.push(this.foodSpawn)
-    this.systems.push(this.tomoInput)
-    this.systems.push(new MovementSystem({ friction: 0.99, maxSpeed: 5 }))
-    this.systems.push(new CollisionSystem())
   }
 
-  update(dt: number) {
-    const tomo = this.queryByTag('tomo')[0] as TomoEntity | undefined
-    if (tomo) {
-      tomo.shouldSwim = this.isSwimming()
+  update(_dt: number) {
+    const root = this.getRoot()
+
+    if (this.shouldGenerateFood && document.querySelector('.food') === null) {
+      const el = document.createElement('div')
+      el.classList.add('food')
+      el.style.position = 'absolute'
+      el.style.width = '50px'
+      el.style.height = '50px'
+      el.style.backgroundColor = 'brown'
+      el.style.left = `${Math.random() * 1000}px`
+      el.style.top = `${Math.random() * 1000}px`
+      root.appendChild(el)
     }
 
-    super.update(dt)
-    this.keyboard.step()
+    if (!this.tomo) return
+
+    const speed = 0.3 + this.boost
+
+    if (this.tomo.shouldSwim) {
+      if (this.keys.ArrowRight) this.vx += speed
+      if (this.keys.ArrowLeft) this.vx -= speed
+      if (this.keys.ArrowDown) this.vy += speed
+      if (this.keys.ArrowUp) this.vy -= speed
+      if (this.keys.Space) {
+        this.vy = -10
+        this.vx = -5
+      }
+    }
+
+    if (this.bowl) {
+      const tomoRect = this.tomo.el.getBoundingClientRect()
+      const bowlRect = this.bowl.getBoundingClientRect()
+      this.tomo.hasEaten =
+        tomoRect.left < bowlRect.right &&
+        tomoRect.right > bowlRect.left &&
+        tomoRect.top < bowlRect.bottom &&
+        tomoRect.bottom > bowlRect.top
+
+      if (this.tomo.hasEaten) {
+        this.boost = 10
+        this.bowl.remove()
+        this.bowl = null
+        this.tomo.hasEaten = false
+        this.tomo.shouldSwim = false
+        this.tomo.happiness += 10
+        this.tomo.energy += 10
+        this.tomo.health += 10
+      }
+    }
+
+    const friction = 0.99
+    this.vx *= friction
+    this.vy *= friction
+
+    const maxSpeed = 5
+    if (this.vx > maxSpeed) this.vx = maxSpeed
+    if (this.vx < -maxSpeed) this.vx = -maxSpeed
+    if (this.vy > maxSpeed) this.vy = maxSpeed
+    if (this.vy < -maxSpeed) this.vy = -maxSpeed
+
+    this.tomo.x += this.vx
+    this.tomo.y += this.vy
   }
 
   unmount() {
-    window.removeEventListener('keydown', this.preventArrowScroll)
-    this.keyboard.detach(window)
+    window.removeEventListener('keydown', this.onKeyDown)
+    window.removeEventListener('keyup', this.onKeyUp)
     super.unmount()
   }
 
-  private isSwimming() {
-    return (
-      this.keyboard.state('ArrowRight').down ||
-      this.keyboard.state('ArrowLeft').down ||
-      this.keyboard.state('ArrowUp').down ||
-      this.keyboard.state('ArrowDown').down ||
-      this.keyboard.state('Space').down
-    )
+  private onKeyDown = (e: KeyboardEvent) => {
+    const code = e.code as (typeof this.allowedCodes)[number]
+    if (!this.allowedCodes.includes(code)) return
+    e.preventDefault()
+    if (this.tomo) this.tomo.shouldSwim = true
+    this.keys[code] = true
   }
 
-  private preventArrowScroll = (e: KeyboardEvent) => {
-    const allowed = new Set(['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Space'])
-    if (!allowed.has(e.code)) return
+  private onKeyUp = (e: KeyboardEvent) => {
+    const code = e.code as (typeof this.allowedCodes)[number]
+    if (!this.allowedCodes.includes(code)) return
     e.preventDefault()
+    if (this.tomo) this.tomo.shouldSwim = false
+    this.keys[code] = false
   }
 }
 

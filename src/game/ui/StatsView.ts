@@ -1,4 +1,4 @@
-import type { TomoEntity } from '../entities/TomoEntity'
+import type { Tomo } from '../objects/Tomo'
 
 export class StatsView {
   private energyEl: HTMLElement
@@ -13,11 +13,11 @@ export class StatsView {
     this.healthEl = root.querySelector('#health') as HTMLElement
   }
 
-  render(tomo: TomoEntity) {
-    this.energyEl.textContent = `${Math.round(tomo.stats.energy)}`
-    this.friendshipEl.textContent = `${Math.round(tomo.stats.friendship)}`
-    this.happinessEl.textContent = `${Math.round(tomo.stats.happiness)}`
-    this.healthEl.textContent = `${Math.round(tomo.stats.health)}`
+  render(tomo: Tomo) {
+    this.energyEl.textContent = `${Math.round(tomo.energy)}`
+    this.friendshipEl.textContent = `${Math.round(tomo.friendship)}`
+    this.happinessEl.textContent = `${Math.round(tomo.happiness)}`
+    this.healthEl.textContent = `${Math.round(tomo.health)}`
   }
 }
 
