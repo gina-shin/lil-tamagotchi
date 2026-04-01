@@ -3,6 +3,7 @@
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat; */
+  background-color: rgb(126, 184, 203);
   min-height: 100vh;
   position: relative;
 }
@@ -26,7 +27,6 @@
   top: 0;
   left: 0px;
   position: absolute;
-  background-color: brown;
 }
 
 #bowl {

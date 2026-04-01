@@ -11,8 +11,6 @@ export class HomeScene extends Scene {
   private vy = 0
   private boost = 0
 
-  private bowl: HTMLDivElement | null = null
-
   private allowedCodes = ['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Space'] as const
   private keys: Partial<Record<(typeof this.allowedCodes)[number], boolean>> = {}
 
@@ -22,7 +20,6 @@ export class HomeScene extends Scene {
 
     const fishEl = root.querySelector('#fish') as HTMLDivElement
     const startButton = root.querySelector('.start-button') as HTMLButtonElement
-    this.bowl = root.querySelector('#bowl') as HTMLDivElement
 
     this.tomo = new Tomo(fishEl)
     this.tomo.x = 1000
@@ -36,62 +33,64 @@ export class HomeScene extends Scene {
     })
   }
 
-  update(_dt: number) {
-    const root = this.getRoot()
-
-    if (this.shouldGenerateFood && document.querySelector('.food') === null) {
+  private generateFood(numberOfFood: number) {
+    const root = this.getRoot() // what does this do?
+  
+    for (let i = 0; i < numberOfFood; i++) {
       const el = document.createElement('div')
       el.classList.add('food')
       el.style.position = 'absolute'
-      el.style.width = '50px'
-      el.style.height = '50px'
+      el.style.width = '30px'
+      el.style.height = '30px'
       el.style.backgroundColor = 'brown'
       el.style.left = `${Math.random() * 1000}px`
       el.style.top = `${Math.random() * 1000}px`
       root.appendChild(el)
     }
+  }
 
+  update(_dt: number) {
     if (!this.tomo) return
 
+    if (this.shouldGenerateFood && document.querySelector('.food') === null) {
+      const numberOfFoodToGenerate = Math.min(Math.floor(Math.random() * 3), 10 )
+      this.generateFood(numberOfFoodToGenerate)
+      this.shouldGenerateFood = false
+    }
+
+    const foodItems = document.querySelectorAll('.food')
+
+    foodItems.forEach(foodItem => {
+      const foodItemRect = foodItem.getBoundingClientRect()
+      const tomoRect = this.tomo?.el.getBoundingClientRect()
+      if (tomoRect && tomoRect.left < foodItemRect.right &&
+        tomoRect.right > foodItemRect.left &&
+        tomoRect.top < foodItemRect.bottom &&
+        tomoRect.bottom > foodItemRect.top) {
+          this.boost += 1
+          foodItem.remove()
+        }
+    })
+
+    console.log('boost', this.boost)
+
     const speed = 0.3 + this.boost
+
+    console.log('speed', speed)
+
 
     if (this.tomo.shouldSwim) {
       if (this.keys.ArrowRight) this.vx += speed
       if (this.keys.ArrowLeft) this.vx -= speed
       if (this.keys.ArrowDown) this.vy += speed
       if (this.keys.ArrowUp) this.vy -= speed
-      if (this.keys.Space) {
-        this.vy = -10
-        this.vx = -5
-      }
-    }
-
-    if (this.bowl) {
-      const tomoRect = this.tomo.el.getBoundingClientRect()
-      const bowlRect = this.bowl.getBoundingClientRect()
-      this.tomo.hasEaten =
-        tomoRect.left < bowlRect.right &&
-        tomoRect.right > bowlRect.left &&
-        tomoRect.top < bowlRect.bottom &&
-        tomoRect.bottom > bowlRect.top
-
-      if (this.tomo.hasEaten) {
-        this.boost = 10
-        this.bowl.remove()
-        this.bowl = null
-        this.tomo.hasEaten = false
-        this.tomo.shouldSwim = false
-        this.tomo.happiness += 10
-        this.tomo.energy += 10
-        this.tomo.health += 10
-      }
     }
 
     const friction = 0.99
     this.vx *= friction
     this.vy *= friction
 
-    const maxSpeed = 5
+    const maxSpeed = 10
     if (this.vx > maxSpeed) this.vx = maxSpeed
     if (this.vx < -maxSpeed) this.vx = -maxSpeed
     if (this.vy > maxSpeed) this.vy = maxSpeed
