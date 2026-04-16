@@ -14,6 +14,14 @@
   position: absolute;
 } */
 
+.ocean-floor {
+  background-color: sandybrown;
+  height: 80px;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+}
+
 .start-button {
   position: absolute;
   bottom: 0;
@@ -22,8 +30,9 @@
 }
 
 #fish {
-  height: 300px;
-  width: 300px;
+  height: 150px;
+  width: 200px;
+  object-fit: contain;
   top: 0;
   left: 0px;
   position: absolute;

@@ -1,10 +1,20 @@
 import type { Activity } from './activity.ts'
 import type { Food } from './Food'
 
+export type SwimIntent = {
+  left: boolean
+  right: boolean
+  up: boolean
+  down: boolean
+}
+
 export class Tomo {
   _x = 1000
   _y = 100
   _shouldSwim = false
+  vx = 0
+  vy = 0
+  boost = 0
   _hasEaten = false
   _feedingTarget: Food | null = null
   el: HTMLElement
@@ -82,6 +92,40 @@ export class Tomo {
     const step = 2
     if (Math.abs(dx) > 1) this.x += Math.sign(dx) * step
     if (Math.abs(dy) > 1) this.y += Math.sign(dy) * step
+  }
+
+  stepSwim(intent: SwimIntent, bounds: { windowHeight: number, floorPixelHeight: number }) {
+    const speed = 0.3 + this.boost
+
+    if (this._shouldSwim) {
+      if (intent.right) {
+        this.el.style.scale = '-1 1'
+        this.vx += speed
+      }
+      if (intent.left) {
+        this.el.style.scale = '1 1'
+        this.vx -= speed
+      }
+      if (intent.down) this.vy += speed
+      if (intent.up) this.vy -= speed
+    }
+
+    const friction = 0.99
+    this.vx *= friction
+    this.vy *= friction
+
+    const maxSpeed = 10
+    if (this.vx > maxSpeed) this.vx = maxSpeed
+    if (this.vx < -maxSpeed) this.vx = -maxSpeed
+    if (this.vy > maxSpeed) this.vy = maxSpeed
+    if (this.vy < -maxSpeed) this.vy = -maxSpeed
+
+    const minY = bounds.windowHeight - bounds.floorPixelHeight - this.el.offsetHeight
+    this.x += this.vx
+    this.y += this.vy
+
+    if (this.y < 0) this.y = 0
+    if (this.y >= minY) this.y = minY
   }
 }
 
